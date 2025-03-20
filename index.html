@@ -1,13 +1,36 @@
-<!doctype html>
+<!-- index.html -->
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
+    <title>Plyr + Vite Example</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <h1>Plyr Player Example</h1>
+      
+      <div class="player-container">
+        <h2>Video Player</h2>
+        <div class="plyr-video-container">
+          <!-- Video player -->
+          <video id="player" playsinline controls data-poster="https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.jpg">
+            <source src="https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-576p.mp4" type="video/mp4" />
+          </video>
+        </div>
+      </div>
+      
+      <div class="player-container">
+        <h2>Audio Player</h2>
+        <div class="plyr-audio-container">
+          <!-- Audio player -->
+          <audio id="player-audio" controls>
+            <source src="https://cdn.plyr.io/static/demo/Kishi_Bashi_-_It_All_Began_With_a_Burst.mp3" type="audio/mp3" />
+          </audio>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
