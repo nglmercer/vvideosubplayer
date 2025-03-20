@@ -1,0 +1,18 @@
+[Script Info]
+Title: Sample ASS File
+ScriptType: v4.00+
+WrapStyle: 0
+PlayResX: 1280
+PlayResY: 720
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:05.00,0:00:08.00,Default,,0,0,0,,Hello, welcome to this video!
+Dialogue: 0,0:00:10.00,0:00:15.00,Default,,0,0,0,,This is a sample ASS subtitle file for testing the video player.
+Dialogue: 0,0:00:20.00,0:00:25.00,Default,,0,0,0,,ASS format supports {\b1}advanced styling{\b0} and positioning.
+Dialogue: 0,0:00:30.00,0:00:35.00,Default,,0,0,0,,You can have {\c&H0000FF&}colored text{\c&HFFFFFF&} and other formatting.
+Dialogue: 0,0:00:40.00,0:00:45.00,Default,,0,0,0,,Thanks for watching this demo!
