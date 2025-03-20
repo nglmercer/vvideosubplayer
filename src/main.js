@@ -1,6 +1,8 @@
 import './style.css';
 import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
+import { loadAssSubtitles, createVttBlob } from './subtitleConverter';
+import { loadSrtSubtitles } from './srtConverter';
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize video player

@@ -1,2 +1,1 @@
-1. ademas necesito poder crear si se recibe un objeto entonces se crea un select para seleccionar idioma del subtitulo donde tiene label y value para la url o los links del archivo de subtitulos 
-2. el srt parser no funciona ya que muestra todos los subtitulos de una sola vez necesito que este en el modulo de subparser tener un modulo aparte en otro archivo para parseSubtitles
+1. add https://www.npmjs.com/package/videojs-vtt.js 
