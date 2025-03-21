@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Configurar video inicial con subtítulos
     player.changeSource(
-      'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-576p.mp4',
+      '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.mp4',
       'video/mp4',
       [
         { label: 'Español', srclang: 'es', src: subtitulosES, default: true },
@@ -379,9 +379,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     controlsContainer.appendChild(btnDebug);
-    player.on('ready', () => {
+    player.player.on('ready', () => {
       console.log('Plyr player initialized', player);
-      const videoElement = player.elements.container.querySelector('video');
+      const videoElement = player.player.elements.container.querySelector('video');
   
       const renderer = new JASSUB({
         video: videoElement,
@@ -400,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   
     // Clean up on destroy
-    player.on('destroy', () => {
+    player.player.on('destroy', () => {
       if (player.jassub) {
         player.jassub.destroy();
       }
