@@ -28,6 +28,8 @@ class VideoPlayer {
     };
     this.options = { ...this.defaultOptions, ...options };
     this.player = null;
+    this.qualityOptions = [];
+    this.currentQuality = null;
     this.initialize();
   }
 
@@ -85,14 +87,49 @@ class VideoPlayer {
         console.warn('Error getting current track:', error);
       }
     });
+    
+    // Add quality change listener
+    this.player.on('qualitychange', (event) => {
+      console.log('Quality changed to:', event.detail.quality);
+      this.currentQuality = event.detail.quality;
+    });
   }
 
-  // Change video source and add captions using Plyr's native captions support
-  changeSource(sourceUrl, type = 'video/mp4', captionTracks = []) {
+  // Change video source with quality options and captions
+  changeSource(options) {
     if (!this.player) return;
-
-    console.log('Changing source with tracks:', captionTracks);
-
+    
+    const {
+      qualities = [],
+      defaultQuality = null,
+      captionTracks = []
+    } = options;
+    
+    console.log('Changing source with qualities:', qualities);
+    console.log('Caption tracks:', captionTracks);
+    
+    // Store quality options for later use
+    this.qualityOptions = qualities;
+    
+    // Determine the default quality to use
+    let selectedQuality = defaultQuality;
+    if (!selectedQuality && qualities.length > 0) {
+      // If no default is specified, use the highest quality
+      selectedQuality = qualities.reduce((prev, current) => {
+        return (prev.height > current.height) ? prev : current;
+      }).id;
+    }
+    
+    this.currentQuality = selectedQuality;
+    
+    // Find the selected quality object
+    const selectedQualityObj = qualities.find(q => q.id === selectedQuality) || qualities[0];
+    
+    if (!selectedQualityObj) {
+      console.error('No valid quality option found');
+      return;
+    }
+    
     // Map caption tracks to Plyr's expected format
     const tracks = captionTracks.map(track => ({
       kind: 'captions',
@@ -101,19 +138,33 @@ class VideoPlayer {
       src: track.src,
       default: track.default || false
     }));
-
-    // Update source with tracks configuration
+    
+    // Create the quality options in Plyr format
+    const plyrQualities = qualities.map(quality => ({
+      src: quality.src,
+      type: quality.type || 'video/mp4',
+      size: quality.height
+    }));
+    
+    // Update source with tracks and quality options
     this.player.source = {
       type: 'video',
-      sources: [
-        {
-          src: sourceUrl,
-          type: type,
-        },
-      ],
+      sources: plyrQualities,
       tracks: tracks
     };
-
+    
+    // Set the default quality
+    if (selectedQuality && this.player.quality) {
+      setTimeout(() => {
+        try {
+          this.player.quality = selectedQualityObj.height;
+          console.log('Set default quality to:', selectedQualityObj.height);
+        } catch (error) {
+          console.warn('Error setting default quality:', error);
+        }
+      }, 500);
+    }
+    
     // Activate captions if any tracks are available
     if (tracks.length > 0 && tracks.some(track => track.default)) {
       setTimeout(() => {
@@ -123,6 +174,53 @@ class VideoPlayer {
         }
       }, 500);
     }
+  }
+
+  // Change video quality
+  changeQuality(qualityId) {
+    if (!this.player || !this.qualityOptions.length) return;
+    
+    console.log('Changing quality to:', qualityId);
+    
+    const qualityOption = this.qualityOptions.find(q => q.id === qualityId);
+    if (!qualityOption) {
+      console.error(`Quality option with ID "${qualityId}" not found`);
+      return;
+    }
+    
+    // Get current playback state
+    const currentTime = this.player.currentTime;
+    const wasPlaying = !this.player.paused;
+    
+    // Set the quality using Plyr's API
+    if (this.player.quality) {
+      try {
+        this.player.quality = qualityOption.height;
+        this.currentQuality = qualityId;
+        
+        // Restore playback state
+        setTimeout(() => {
+          this.player.currentTime = currentTime;
+          if (wasPlaying) {
+            this.player.play();
+          }
+        }, 300);
+        
+        console.log('Quality changed successfully to:', qualityOption.height);
+      } catch (error) {
+        console.error('Error changing quality:', error);
+      }
+    }
+  }
+  
+  // Get current quality
+  getCurrentQuality() {
+    return this.currentQuality;
+  }
+  
+  // Get available quality options
+  getQualityOptions() {
+    return this.qualityOptions;
   }
 
   // Add captions using Plyr's native API
@@ -301,14 +399,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const subtitulosFR = './src/subtitles/sample.ass';
 
     // Configurar video inicial con subtítulos
-    player.changeSource(
-      '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.mp4',
-      'video/mp4',
-      [
-        { label: 'Español', srclang: 'es', src: subtitulosES, default: true },
-        { label: 'English', srclang: 'en', src: subtitulosEN },
-        { label: 'Français', srclang: 'fr', src: subtitulosFR }
-      ]
+    player.changeSource({
+      qualities:         [{
+        id: 'hd',
+        src:       '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.mp4',
+        height:  720,
+        type:  'video/mp4'
+      },
+      {
+        id: 'sd',
+        src:       '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.mp4',
+        height:  1080,
+        type:  'video/mp4'
+      },
+    ],
+    defaultQuality: "hd",
+    captionTracks:       [
+      { label: 'Español', srclang: 'es', src: subtitulosES, default: true },
+      { label: 'English', srclang: 'en', src: subtitulosEN },
+      { label: 'Français', srclang: 'fr', src: subtitulosFR }
+    ]
+    }
+
+
     );
     /* this subs  is a example /// no se utilizara ya que se usara e implementara JASSUB y solo sera para generar los iconos y escuchar los eventos de cambio o activacion de subtítulos
     [
