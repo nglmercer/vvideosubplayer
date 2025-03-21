@@ -12,6 +12,7 @@
     "vite": "^6.2.0"
   },
   "dependencies": {
+    "jassub": "^1.7.18",
     "plyr": "^3.7.8"
   }
 }
