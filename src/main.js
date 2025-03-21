@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
       autoplay: false
     });
 
-    // Use proper paths for different language subtitles
+    // ejemplo de uso // no funciona en .ass ni srt // se usa rendersub = new JASSUB para los subtítulos
     const subtitulosES = './src/subtitles/sample.ass';
     const subtitulosEN = './src/subtitles/sample.ass';
     const subtitulosFR = './src/subtitles/sample.ass';
@@ -310,7 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
         { label: 'Français', srclang: 'fr', src: subtitulosFR }
       ]
     );
-
+    /* this subs  is a example /// no se utilizara ya que se usara e implementara JASSUB y solo sera para generar los iconos y escuchar los eventos de cambio o activacion de subtítulos
+    [
+      { label: 'Español', srclang: 'es', src: subtitulosES, default: true },
+      { label: 'English', srclang: 'en', src: subtitulosEN },
+      { label: 'Français', srclang: 'fr', src: subtitulosFR }
+    ]
+    */
     // Initialize JASSUB after Plyr is ready
     player.player.on('ready', () => {
       console.log('Plyr player initialized', player);
