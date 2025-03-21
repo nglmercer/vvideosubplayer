@@ -1,7 +1,10 @@
 import './style.css';
 import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
-
+import JASSUB from 'jassub';
+import workerUrl from 'jassub/dist/jassub-worker.js?url';
+import wasmUrl from 'jassub/dist/jassub-worker.wasm?url';
+import subtitleStrings from './sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.ass?raw';
 class VideoPlayer {
   constructor(elementId, options = {}) {
     this.elementId = elementId;
@@ -376,6 +379,32 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     controlsContainer.appendChild(btnDebug);
+    player.on('ready', () => {
+      console.log('Plyr player initialized', player);
+      const videoElement = player.elements.container.querySelector('video');
+  
+      const renderer = new JASSUB({
+        video: videoElement,
+        subContent: subtitleStrings,
+        workerUrl,
+        wasmUrl,
+        prescaleFactor: 0.8,
+        dropAllAnimations: false,
+        asyncRenderMode: true
+      });
+  
+      // Store JASSUB instance on player
+      player.jassub = renderer;
+  
+      console.log('Subtitle renderer initialized');
+    });
+  
+    // Clean up on destroy
+    player.on('destroy', () => {
+      if (player.jassub) {
+        player.jassub.destroy();
+      }
+    });
   }, 100); // Short delay to ensure DOM is ready
 });
 
