@@ -368,23 +368,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ensure the crossorigin attribute is set before the player is initialized
     videoElement.setAttribute('crossorigin', 'anonymous');
-    
-    // Add the <track> elements directly to the <video> element for better compatibility
-    const trackES = document.createElement('track');
-    trackES.kind = 'captions';
-    trackES.label = 'Español';
-    trackES.srclang = 'es';
-    trackES.src = './subtitles/sample.es.vtt';
-    trackES.default = true;
-    videoElement.appendChild(trackES);
-    
-    const trackEN = document.createElement('track');
-    trackEN.kind = 'captions';
-    trackEN.label = 'English';
-    trackEN.srclang = 'en';
-    trackEN.src = './subtitles/sample.en.vtt';
-    videoElement.appendChild(trackEN);
-
     // Initialize the player
     const player = new VideoPlayer('player', {
       controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'captions', 'settings', 'fullscreen'],
@@ -458,14 +441,33 @@ document.addEventListener('DOMContentLoaded', () => {
       btnChangeVideo.addEventListener('click', () => {
         // Update current episode before changing source
         currentEpisode = 'episode2';
-        
-        player.changeSource(
+        /*
           '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 2.mp4',
           'video/mp4',
           [
             { label: 'Español', srclang: 'es', src: subtitulosES, default: true },
             { label: 'English', srclang: 'en', src: subtitulosEN }
-          ]
+          ] */
+        player.changeSource({
+          qualities:         [{
+            id: 'hd',
+            src:       '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 2.mp4',
+            height:  720,
+            type:  'video/mp4'
+          },
+          {
+            id: 'sd',
+            src:       '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 2.mp4',
+            height:  1080,
+            type:  'video/mp4'
+          },
+        ],
+        defaultQuality: "hd",
+        captionTracks:       [
+          { label: 'Español', srclang: 'es', src: subtitulosES, default: true },
+          { label: 'English', srclang: 'en', src: subtitulosEN }
+        ]
+        }
         );
         
         // Update JASSUB subtitles with proper content for the second episode
