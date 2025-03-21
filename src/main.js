@@ -6,7 +6,7 @@ import workerUrl from 'jassub/dist/jassub-worker.js?url';
 import wasmUrl from 'jassub/dist/jassub-worker.wasm?url';
 import subtitleStrings from './sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.ass?raw';
 import secondsubtitleStrings from './sample/Medaka Kuroiwa is Impervious to My Charms Episode 2.ass?raw';
-
+// SAMPLE NO EXISTE YA QUE PESA MAS DE VARIOS GB ---> REEMPLAZAR LOS VIDEOS O ARCHIVOS DE SUBTITULOS
 class VideoPlayer {
   constructor(elementId, options = {}) {
     this.elementId = elementId;
