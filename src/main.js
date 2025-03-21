@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
     trackES.kind = 'captions';
     trackES.label = 'Español';
     trackES.srclang = 'es';
-    trackES.src = './subtitles/sample.es.srt';
+    trackES.src = './subtitles/sample.es.vtt';
     trackES.default = true;
     videoElement.appendChild(trackES);
     
@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
     trackEN.kind = 'captions';
     trackEN.label = 'English';
     trackEN.srclang = 'en';
-    trackEN.src = './subtitles/sample.en.srt';
+    trackEN.src = './subtitles/sample.en.vtt';
     videoElement.appendChild(trackEN);
 
     // Initialize the player
@@ -282,9 +282,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Use proper paths for different language subtitles
-    const subtitulosES = './subtitles/sample.es.srt';
-    const subtitulosEN = './subtitles/sample.en.srt';
-    const subtitulosFR = './subtitles/sample.fr.srt';
+    const subtitulosES = './src/subtitles/sample.ass';
+    const subtitulosEN = './src/subtitles/sample.ass';
+    const subtitulosFR = './src/subtitles/sample.ass';
 
     // Configurar video inicial con subtítulos
     player.changeSource(

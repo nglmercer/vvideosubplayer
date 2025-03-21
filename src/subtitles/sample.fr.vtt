@@ -1,0 +1,24 @@
+WEBVTT
+
+00:00:01.000 --> 00:00:04.000
+Hola y bienvenidos a este vídeo tutorial.
+
+00:00:05.000 --> 00:00:09.500
+Hoy vamos a aprender cómo crear un reproductor de video
+con subtítulos usando la biblioteca Plyr.
+
+00:00:10.000 --> 00:00:15.000
+Los subtítulos VTT son compatibles con la mayoría de
+los navegadores web modernos.
+
+00:00:16.000 --> 00:00:20.000
+Pueden incluir múltiples líneas de texto
+como puedes ver en este ejemplo.
+
+00:00:21.000 --> 00:00:26.000
+También se pueden añadir <b>formatos</b> como <i>cursiva</i>
+y otros estilos usando etiquetas HTML.
+
+00:00:27.000 --> 00:00:32.000
+Para completar la configuración, necesitarás
+guardar este archivo con extensión .vtt
