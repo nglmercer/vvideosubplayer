@@ -13,8 +13,6 @@
   },
   "dependencies": {
     "jassub": "^1.7.18",
-    "libjass": "^0.11.0",
-    "video.js": "^8.22.0",
-    "videojs-ass": "^0.8.0"
+    "plyr": "^3.7.8"
   }
 }
