@@ -5,6 +5,8 @@ import JASSUB from 'jassub';
 import workerUrl from 'jassub/dist/jassub-worker.js?url';
 import wasmUrl from 'jassub/dist/jassub-worker.wasm?url';
 import subtitleStrings from './sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.ass?raw';
+import secondsubtitleStrings from './sample/Medaka Kuroiwa is Impervious to My Charms Episode 2.ass?raw';
+
 class VideoPlayer {
   constructor(elementId, options = {}) {
     this.elementId = elementId;
@@ -237,6 +239,15 @@ class VideoPlayer {
   }
 }
 
+// Map to store subtitle content by episode
+const subtitleMap = {
+  'episode1': subtitleStrings,
+  'episode2': secondsubtitleStrings
+};
+
+let rendersub = null;
+let currentEpisode = 'episode1';
+
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
   // Give a little time for everything to initialize
@@ -300,109 +311,58 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     );
 
-    // Create controls container
-    const controlsContainer = document.createElement('div');
-    controlsContainer.className = 'subtitle-controls';
-    controlsContainer.style.margin = '10px 0';
-    
-    // Toggle subtitles button
-    const btnToggleSubtitles = document.createElement('button');
-    btnToggleSubtitles.textContent = 'Toggle Subtitles';
-    btnToggleSubtitles.style.marginRight = '10px';
-    btnToggleSubtitles.addEventListener('click', () => {
-      if (player.player && player.player.captions) {
-        const isActive = player.player.captions.active;
-        player.toggleCaptions(!isActive);
-      }
-    });
-    controlsContainer.appendChild(btnToggleSubtitles);
-    
-    // Language buttons
-    const languages = [
-      { code: 'es', label: 'Español' },
-      { code: 'en', label: 'English' },
-      { code: 'fr', label: 'Français' }
-    ];
-    
-    languages.forEach(lang => {
-      const btn = document.createElement('button');
-      btn.textContent = lang.label;
-      btn.style.marginRight = '10px';
-      btn.addEventListener('click', () => {
-        player.changeCaptionLanguage(lang.code);
-      });
-      controlsContainer.appendChild(btn);
-    });
-    
-    // Append controls container to player container instead of directly after video element
-    playerContainer.appendChild(controlsContainer);
-
-    // Botón para cambiar video
-    const btnChangeVideo = document.getElementById('btn-change-video');
-    if (btnChangeVideo) {
-      btnChangeVideo.addEventListener('click', () => {
-        player.changeSource(
-          'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-576p.mp4',
-          'video/mp4',
-          [
-            { label: 'Español', srclang: 'es', src: subtitulosES, default: true },
-            { label: 'English', srclang: 'en', src: subtitulosEN }
-          ]
-        );
-      });
-    }
-    
-    // Add a debug button to check subtitles
-    const btnDebug = document.createElement('button');
-    btnDebug.textContent = 'Debug Subtitles';
-    btnDebug.style.marginTop = '10px';
-    btnDebug.addEventListener('click', () => {
-      try {
-        const tracks = player.getCaptionLanguages();
-        console.log('Current tracks:', tracks);
-        console.log('Captions active:', player.player.captions ? player.player.captions.active : 'N/A');
-        console.log('Current track:', player.player.captions ? player.player.captions.currentTrack : 'N/A');
-        
-        // Check if subtitle files are accessible
-        languages.forEach(lang => {
-          const url = `./subtitles/sample.${lang.code}.srt`;
-          fetch(url)
-            .then(response => {
-              console.log(`Subtitle file ${url}: ${response.ok ? 'accessible' : 'not found'}`);
-            })
-            .catch(error => {
-              console.error(`Error checking subtitle file ${url}:`, error);
-            });
-        });
-      } catch (error) {
-        console.error('Debug error:', error);
-      }
-    });
-    controlsContainer.appendChild(btnDebug);
+    // Initialize JASSUB after Plyr is ready
     player.player.on('ready', () => {
       console.log('Plyr player initialized', player);
       const videoElement = player.player.elements.container.querySelector('video');
-  
-      const renderer = new JASSUB({
+      
+      // Initialize JASSUB with the first episode subtitles
+      rendersub = new JASSUB({
         video: videoElement,
-        subContent: subtitleStrings,
+        subContent: subtitleMap[currentEpisode],
         workerUrl,
         wasmUrl,
         prescaleFactor: 0.8,
         dropAllAnimations: false,
         asyncRenderMode: true
       });
-  
+      
       // Store JASSUB instance on player
-      player.jassub = renderer;
-  
-      console.log('Subtitle renderer initialized');
+      player.player.jassub = rendersub;
+      
+      console.log('Subtitle renderer initialized', rendersub);
     });
+
+    // Botón para cambiar video
+    const btnChangeVideo = document.getElementById('btn-change-video');
+    if (btnChangeVideo) {
+      btnChangeVideo.addEventListener('click', () => {
+        // Update current episode before changing source
+        currentEpisode = 'episode2';
+        
+        player.changeSource(
+          '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 2.mp4',
+          'video/mp4',
+          [
+            { label: 'Español', srclang: 'es', src: subtitulosES, default: true },
+            { label: 'English', srclang: 'en', src: subtitulosEN }
+          ]
+        );
+        
+        // Update JASSUB subtitles with proper content for the second episode
+        if (rendersub) {
+          // Use the updated subtitle content directly from our map
+          rendersub.freeTrack();
+          rendersub.setTrackByContent(subtitleMap[currentEpisode]);
+          console.log('Updated subtitles for episode 2');
+        }
+      });
+    }
   
     // Clean up on destroy
     player.player.on('destroy', () => {
-      if (player.jassub) {
-        player.jassub.destroy();
+      if (player.player.jassub) {
+        player.player.jassub.destroy();
       }
     });
   }, 100); // Short delay to ensure DOM is ready
