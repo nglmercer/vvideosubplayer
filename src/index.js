@@ -3,14 +3,15 @@ import 'plyr/dist/plyr.css';
 import JASSUB from 'jassub';
 import workerUrl from 'jassub/dist/jassub-worker.js?url';
 import wasmUrl from 'jassub/dist/jassub-worker.wasm?url';
-import subtitleStrings from '../public/subtitles/sample.ass?raw';
+import subtitleStrings from './sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.ass?raw';
+
 console.log('Subtitle string:', subtitleStrings);
 
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.createElement('div');
   container.innerHTML = `
     <video id="my-video" controls crossorigin playsinline>
-      <source src="https://vjs.zencdn.net/v/oceans.mp4" type="video/mp4" />
+      <source src="./src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.mp4" type="video/mp4" />
       <p>
         Tu navegador no soporta video HTML5.
       </p>
