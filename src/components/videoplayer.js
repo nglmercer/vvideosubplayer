@@ -2,6 +2,7 @@ import Plyr from 'plyr';
 import JASSUB from 'jassub';
 import workerUrl from 'jassub/dist/jassub-worker.js?url';
 import wasmUrl from 'jassub/dist/jassub-worker.wasm?url';
+
 class VideoPlayer {
   constructor(elementId, options = {}) {
     this.elementId = elementId;
@@ -25,6 +26,8 @@ class VideoPlayer {
     this.player = null;
     this.qualityOptions = [];
     this.currentQuality = null;
+    this._qualityChangeListenerAdded = false;
+    this.currentSubtitleContent = null;
     this.initialize();
   }
 
@@ -172,143 +175,157 @@ class VideoPlayer {
   }
 
   // Change video quality
-// Update the changeQuality method to preserve JASSUB subtitles
-changeQuality(qualityId) {
-  if (!this.player || !this.qualityOptions.length) return;
-  
-  console.log('Changing quality to:', qualityId);
-  
-  const qualityOption = this.qualityOptions.find(q => q.id === qualityId);
-  if (!qualityOption) {
-    console.error(`Quality option with ID "${qualityId}" not found`);
-    return;
-  }
-  
-  // Get current playback state
-  const currentTime = this.player.currentTime;
-  const wasPlaying = !this.player.paused;
-  
-  // Save the JASSUB instance and subtitle content before changing quality
-  const jassub = this.player.jassub;
-  const hasJASSUB = jassub && typeof jassub.getSubContent === 'function';
-  let subContent = null;
-  
-  // If JASSUB is available, get the current subtitle content
-  if (hasJASSUB) {
-    try {
-      // Store the current subtitle content if possible
-      subContent = jassub.getSubContent ? jassub.getSubContent() : subtitleMap[currentEpisode];
-      console.log('Saved subtitle content before quality change');
-    } catch (error) {
-      console.warn('Error saving subtitle content:', error);
+  async changeQuality(qualityId) {
+    if (!this.player || !this.qualityOptions.length) return;
+    
+    console.log('Changing quality to:', qualityId);
+    
+    const qualityOption = this.qualityOptions.find(q => q.id === qualityId);
+    if (!qualityOption) {
+      console.error(`Quality option with ID "${qualityId}" not found`);
+      return;
     }
-  }
-  
-  // Set the quality using Plyr's API
-  if (this.player.quality) {
-    try {
-      this.player.quality = qualityOption.height;
-      this.currentQuality = qualityId;
-      
-      // Restore playback state and subtitles
-      setTimeout(() => {
-        this.player.currentTime = currentTime;
+    
+    // Get current playback state
+    const currentTime = this.player.currentTime;
+    const wasPlaying = !this.player.paused;
+    
+    // Save the JASSUB instance and subtitle content before changing quality
+    const jassub = this.player.jassub;
+    const hasJASSUB = jassub && typeof jassub.getSubContent === 'function';
+    
+    // If JASSUB is available, get the current subtitle content
+    if (hasJASSUB) {
+      try {
+        // Store the current subtitle content if possible
+        this.currentSubtitleContent = jassub.getSubContent ? jassub.getSubContent() : this.currentSubtitleContent;
+        console.log('Saved subtitle content before quality change');
+      } catch (error) {
+        console.warn('Error saving subtitle content:', error);
+      }
+    }
+    
+    // Set the quality using Plyr's API
+    if (this.player.quality) {
+      try {
+        this.player.quality = qualityOption.height;
+        this.currentQuality = qualityId;
         
-        // Restore JASSUB subtitles if they were present
-        if (hasJASSUB && subContent) {
-          try {
-            // If JASSUB was destroyed or needs to be recreated
-            if (!this.player.jassub || !this.player.jassub.setTrackByContent) {
-              console.log('Recreating JASSUB instance after quality change');
-              const videoElement = this.player.elements.container.querySelector('video');
-              
-              // Recreate JASSUB with the saved subtitle content
-              this.player.jassub = new JASSUB({
-                video: videoElement,
-                subContent: subContent,
-                workerUrl,
-                wasmUrl,
-                prescaleFactor: 0.8,
-                dropAllAnimations: false,
-                asyncRenderMode: true
-              });
-            } else {
-              // Update existing JASSUB instance with the subtitle content
-              this.player.jassub.freeTrack();
-              this.player.jassub.setTrackByContent(subContent);
-              console.log('Restored subtitles after quality change');
+        // Restore playback state and subtitles
+        setTimeout(() => {
+          this.player.currentTime = currentTime;
+          
+          // Restore JASSUB subtitles if they were present
+          if (hasJASSUB && this.currentSubtitleContent) {
+            try {
+              // If JASSUB was destroyed or needs to be recreated
+              if (!this.player.jassub || !this.player.jassub.setTrackByContent) {
+                console.log('Recreating JASSUB instance after quality change');
+                const videoElement = this.player.elements.container.querySelector('video');
+                
+                // Recreate JASSUB with the saved subtitle content
+                this.initializeJASSUB(videoElement, this.currentSubtitleContent);
+              } else {
+                // Update existing JASSUB instance with the subtitle content
+                this.player.jassub.freeTrack();
+                this.player.jassub.setTrackByContent(this.currentSubtitleContent);
+                console.log('Restored subtitles after quality change');
+              }
+            } catch (error) {
+              console.error('Error restoring subtitles:', error);
             }
-          } catch (error) {
-            console.error('Error restoring subtitles:', error);
           }
-        }
+          
+          // Resume playback if it was playing
+          if (wasPlaying) {
+            this.player.play();
+          }
+        }, 500); // Increased timeout to ensure video has loaded
         
-        // Resume playback if it was playing
-        if (wasPlaying) {
-          this.player.play();
-        }
-      }, 500); // Increased timeout to ensure video has loaded
-      
-      console.log('Quality changed successfully to:', qualityOption.height);
-    } catch (error) {
-      console.error('Error changing quality:', error);
+        console.log('Quality changed successfully to:', qualityOption.height);
+      } catch (error) {
+        console.error('Error changing quality:', error);
+      }
     }
   }
-}
+
+  // Initialize JASSUB with subtitle content (ensure content is already fetched)
   initializeJASSUB(videoElement, subtitleContent) {
+    if (!videoElement) {
+      console.error('No video element provided for JASSUB initialization');
+      return null;
+    }
+    
+    if (!subtitleContent) {
+      console.error('No subtitle content provided for JASSUB initialization');
+      return null;
+    }
+    
+    // Store the subtitle content for future use
+    this.currentSubtitleContent = subtitleContent;
+    
+    // Log subtitle content type and first few characters to help debug
+    console.log('Initializing JASSUB with subtitle content type:', typeof subtitleContent);
+    if (typeof subtitleContent === 'string') {
+      console.log('Subtitle content preview:', subtitleContent.substring(0, 100) + '...');
+    }
+    
     // Destroy existing JASSUB instance if it exists
     if (this.player.jassub) {
+      console.log('Destroying previous JASSUB instance');
       this.player.jassub.destroy();
+      this.player.jassub = null;
     }
     
-    // Create new JASSUB instance
-    this.player.jassub = new JASSUB({
-      video: videoElement,
-      subContent: subtitleContent,
-      workerUrl,
-      wasmUrl,
-      prescaleFactor: 0.8,
-      dropAllAnimations: false,
-      asyncRenderMode: true
-    });
-    
-    console.log('JASSUB initialized', this.player.jassub);
-    
-    // Add listener for qualitychange event to handle subtitle restoration
-    if (!this._qualityChangeListenerAdded) {
-      this.player.on('qualitychange', () => {
-        console.log('Quality change event detected');
-        // Short delay to ensure video element is updated
-        setTimeout(() => {
-          if (this.player.jassub) {
-            // Make sure JASSUB is still rendering
-            const videoElement = this.player.elements.container.querySelector('video');
-            if (videoElement && videoElement !== this.player.jassub.video) {
-              console.log('Video element changed, updating JASSUB');
-              // Get current subtitle content
-              const subContent = this.player.jassub.getSubContent ? 
-                this.player.jassub.getSubContent() : 
-                subtitleMap[currentEpisode];
-              
-              // Re-initialize JASSUB with new video element
-              this.initializeJASSUB(videoElement, subContent);
-            }
-          }
-        }, 300);
+    try {
+      // Create new JASSUB instance
+      console.log('Creating new JASSUB instance');
+      this.player.jassub = new JASSUB({
+        video: videoElement,
+        subContent: subtitleContent,
+        workerUrl,
+        wasmUrl,
+        prescaleFactor: 0.8,
+        dropAllAnimations: false,
+        asyncRenderMode: true
       });
-      this._qualityChangeListenerAdded = true;
+      
+      console.log('JASSUB initialized successfully');
+      
+      // Add listener for qualitychange event to handle subtitle restoration
+      if (!this._qualityChangeListenerAdded) {
+        this.player.on('qualitychange', () => {
+          console.log('Quality change event detected');
+          // Short delay to ensure video element is updated
+          setTimeout(() => {
+            if (this.player.jassub) {
+              // Make sure JASSUB is still rendering
+              const videoElement = this.player.elements.container.querySelector('video');
+              if (videoElement && videoElement !== this.player.jassub.video) {
+                console.log('Video element changed, updating JASSUB');
+                // Re-initialize JASSUB with stored subtitle content
+                if (this.currentSubtitleContent) {
+                  this.initializeJASSUB(videoElement, this.currentSubtitleContent);
+                }
+              }
+            }
+          }, 300);
+        });
+        this._qualityChangeListenerAdded = true;
+      }
+      
+      return this.player.jassub;
+    } catch (error) {
+      console.error('Error initializing JASSUB:', error);
+      return null;
     }
-    
-    return this.player.jassub;
   }
   
   // Add this helper method to get current subtitles content
   getCurrentSubtitleContent() {
-    if (this.player && this.player.jassub && typeof this.player.jassub.getSubContent === 'function') {
-      return this.player.jassub.getSubContent();
-    }
-    return subtitleMap[currentEpisode];
+    return this.currentSubtitleContent;
   }
+
   // Get current quality
   getCurrentQuality() {
     return this.currentQuality;
@@ -427,9 +444,14 @@ changeQuality(qualityId) {
   // Destroy the player
   destroy() {
     if (this.player) {
+      if (this.player.jassub) {
+        this.player.jassub.destroy();
+        this.player.jassub = null;
+      }
       this.player.destroy();
       this.player = null;
     }
   }
 }
+
 export default VideoPlayer;

@@ -1,22 +1,55 @@
+// In main.js or your entry file
 import './style.css';
 import 'plyr/dist/plyr.css';
-import subtitleStrings from './sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.ass?raw';
-import secondsubtitleStrings from './sample/Medaka Kuroiwa is Impervious to My Charms Episode 2.ass?raw';
-// SAMPLE NO EXISTE YA QUE PESA MAS DE VARIOS GB ---> REEMPLAZAR LOS VIDEOS O ARCHIVOS DE SUBTITULOS
 import VideoPlayer from './components/videoplayer';
 
-// Map to store subtitle content by episode
+// Map to store subtitle files by episode
 const subtitleMap = {
-  'episode1': subtitleStrings,
-  'episode2': secondsubtitleStrings
+  'episode1': "mdkepisode1.ass",
+  'episode2': "mdkepisode2.ass"
 };
 
 let currentEpisode = 'episode1';
+let player = null;
 
-// Update the document.addEventListener section
-document.addEventListener('DOMContentLoaded', () => {
-  // Give a little time for everything to initialize
-  setTimeout(() => {
+// Properly async function to fetch subtitles
+async function fetchSubtitles(subnameFile) {
+  try {
+    if (!subnameFile) {
+      console.warn('No subtitle file specified');
+      return null;
+    }
+    
+    console.log('Fetching subtitles:', subnameFile);
+    const response = await fetch('http://localhost:3000/api/subs/' + subnameFile);
+    
+    if (!response.ok) {
+      throw new Error('Error en la respuesta del servidor: ' + response.status);
+    }
+    
+    const data = await response.json();
+    console.log('Subtítulos obtenidos correctamente');
+    return data;
+    
+  } catch (error) {
+    console.error('Error al obtener subtítulos:', error);
+    return null;
+  }
+}
+
+// Initialize player with subtitles
+async function initializePlayerWithSubtitles() {
+  try {
+    // First fetch the subtitles
+    const subtitleData = await fetchSubtitles(subtitleMap[currentEpisode]);
+    
+    if (!subtitleData || !subtitleData.subtitle) {
+      console.error('No subtitle data available');
+      return;
+    }
+    
+    console.log('Subtitle data loaded successfully');
+    
     const videoElement = document.getElementById('player');
     if (!videoElement) {
       console.error('No video element found with ID "player"');
@@ -26,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Create a container for the player if it doesn't exist
     let playerContainer = videoElement.parentElement;
     if (!playerContainer || playerContainer.tagName === 'BODY') {
-      // If video element doesn't have a proper parent, create one
       playerContainer = document.createElement('div');
       playerContainer.id = 'player-container';
       videoElement.parentNode.replaceChild(playerContainer, videoElement);
@@ -37,14 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
     videoElement.setAttribute('crossorigin', 'anonymous');
     
     // Initialize the player
-    const player = new VideoPlayer('player', {
+    player = new VideoPlayer('player', {
       controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'captions', 'settings', 'fullscreen'],
       settings: ['captions', 'quality', 'speed'],
       captions: { active: true, language: 'auto', update: true },
       autoplay: false
     });
 
-    // For example, URLs (these won't be used directly with JASSUB but help with the UI)
+    // Sample subtitle URLs (for UI only)
     const subtitulosES = './src/subtitles/sample.ass';
     const subtitulosEN = './src/subtitles/sample.ass';
     const subtitulosFR = './src/subtitles/sample.ass';
@@ -54,14 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
       qualities: [
         {
           id: 'hd',
-          src: '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.mp4',
+          src: 'http://localhost:3000/api/video/mdkepisode1.mp4?resolution=720p',
           height: 720,
           type: 'video/mp4'
         },
         {
           id: 'sd',
-          src: '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 1.mp4',
-          height: 1080,
+          src: 'http://localhost:3000/api/video/mdkepisode1.mp4?resolution=480p',
+          height: 480,
           type: 'video/mp4'
         },
       ],
@@ -75,54 +107,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize JASSUB after Plyr is ready
     player.player.on('ready', () => {
-      console.log('Plyr player initialized', player);
+      console.log('Plyr player initialized');
       const videoElement = player.player.elements.container.querySelector('video');
       
-      // Use the new initializeJASSUB method
-      player.initializeJASSUB(videoElement, subtitleMap[currentEpisode]);
+      // Now we can safely pass the subtitle content
+      player.initializeJASSUB(videoElement, subtitleData.subtitle);
     });
 
     // Add listener for quality change
-    player.player.on('qualitychange', (event) => {
+    player.player.on('qualitychange', async (event) => {
       console.log('Quality changed to:', event.detail.quality);
       
-      // Ensure subtitles are still working after quality change
-      setTimeout(() => {
+      // Wait for the quality change to complete
+      setTimeout(async () => {
         const videoElement = player.player.elements.container.querySelector('video');
-        const jassub = player.player.jassub;
         
-        // If JASSUB is not properly attached to the current video element
-        if (jassub && videoElement && jassub.video !== videoElement) {
-          console.log('Video element changed, reinitializing JASSUB');
-          
-          // Get the current subtitle content
-          const currentContent = player.getCurrentSubtitleContent();
-          
-          // Reinitialize JASSUB with the current video element and subtitle content
-          player.initializeJASSUB(videoElement, currentContent);
+        // Re-fetch the subtitles to ensure we have the latest data
+        const freshSubtitleData = await fetchSubtitles(subtitleMap[currentEpisode]);
+        
+        if (freshSubtitleData && freshSubtitleData.subtitle) {
+          console.log('Reinitializing JASSUB after quality change');
+          player.initializeJASSUB(videoElement, freshSubtitleData.subtitle);
         }
       }, 500);
     });
 
-    // Button to change video
-    const btnChangeVideo = document.getElementById('btn-change-video');
-    if (btnChangeVideo) {
-      btnChangeVideo.addEventListener('click', () => {
+    // Set up change video button
+    setupChangeVideoButton();
+    
+  } catch (error) {
+    console.error('Error initializing player:', error);
+  }
+}
+
+// Setup button to change video
+function setupChangeVideoButton() {
+  const btnChangeVideo = document.getElementById('btn-change-video');
+  if (btnChangeVideo) {
+    btnChangeVideo.addEventListener('click', async () => {
+      try {
         // Update current episode before changing source
         currentEpisode = 'episode2';
         
+        // First fetch the new subtitles
+        const newSubtitleData = await fetchSubtitles(subtitleMap[currentEpisode]);
+        
+        if (!newSubtitleData || !newSubtitleData.subtitle) {
+          console.error('No subtitle data available for episode 2');
+          return;
+        }
+        
+        // Sample subtitle URLs (for UI only)
+        const subtitulosES = './src/subtitles/sample.ass';
+        const subtitulosEN = './src/subtitles/sample.ass';
+        
+        // Change the video source
         player.changeSource({
           qualities: [
             {
               id: 'hd',
-              src: '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 2.mp4',
+              src: 'http://localhost:3000/api/video/mdkepisode2.mp4?resolution=720p',
               height: 720,
               type: 'video/mp4'
             },
             {
               id: 'sd',
-              src: '/src/sample/Medaka Kuroiwa is Impervious to My Charms Episode 2.mp4',
-              height: 1080,
+              src: 'http://localhost:3000/api/video/mdkepisode2.mp4?resolution=480p',
+              height: 480,
               type: 'video/mp4'
             },
           ],
@@ -137,17 +188,15 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           const videoElement = player.player.elements.container.querySelector('video');
           
-          // Use the initializeJASSUB method with the new episode subtitles
-          player.initializeJASSUB(videoElement, subtitleMap[currentEpisode]);
+          // Now we can safely pass the subtitle content
+          player.initializeJASSUB(videoElement, newSubtitleData.subtitle);
         }, 300);
-      });
-    }
-  
-    // Clean up on destroy
-    player.player.on('destroy', () => {
-      if (player.player.jassub) {
-        player.player.jassub.destroy();
+      } catch (error) {
+        console.error('Error changing video:', error);
       }
     });
-  }, 100); // Short delay to ensure DOM is ready
-});
+  }
+}
+
+// Wait for DOM to be ready then initialize everything
+document.addEventListener('DOMContentLoaded', initializePlayerWithSubtitles);
