@@ -1,6 +1,5 @@
 // In main.js or your entry file
 import './style.css';
-import 'plyr/dist/plyr.css';
 import VideoPlayer from './components/videoplayer';
 
 // Map to store subtitle files by episode

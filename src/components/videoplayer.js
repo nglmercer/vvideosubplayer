@@ -1,3 +1,4 @@
+import 'plyr/dist/plyr.css';
 import Plyr from 'plyr';
 import JASSUB from 'jassub';
 import workerUrl from 'jassub/dist/jassub-worker.js?url';
