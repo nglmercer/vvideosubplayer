@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejemplo de Reproductor en Iframe</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .player-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto 30px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    iframe {
+      width: 100%;
+      height: 450px;
+      border: none;
+    }
+    .episode-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    .episode-button {
+      padding: 10px 15px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .episode-button:hover {
+      background-color: #0055aa;
+    }
+    .instructions {
+      background-color: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 30px;
+    }
+    code {
+      background-color: #eee;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>Reproductor de Video con Iframe</h1>
+  
+  <div class="episode-selector">
+    <button class="episode-button" onclick="changeEpisode('episode1')">Episodio 1</button>
+    <button class="episode-button" onclick="changeEpisode('episode2')">Episodio 2</button>
+  </div>
+  
+  <div class="player-container">
+    <iframe id="player-iframe" src="iframe-player.html?episode=episode1&videoHD=http://localhost:3000/api/video/mdkepisode1.mp4?resolution=720p&videoSD=http://localhost:3000/api/video/mdkepisode1.mp4?resolution=480p&subtitle=mdkepisode1.ass&quality=hd" allowfullscreen></iframe>
+  </div>
+  
+  <div class="instructions">
+    <h2>Instrucciones de Uso</h2>
+    <p>Este ejemplo muestra cómo utilizar el reproductor en iframe con parámetros de URL:</p>
+    <ul>
+      <li><code>episode</code>: Identificador del episodio (episode1, episode2, etc.)</li>
+      <li><code>videoHD</code>: URL del video en alta definición</li>
+      <li><code>videoSD</code>: URL del video en definición estándar</li>
+      <li><code>subtitle</code>: Nombre del archivo de subtítulos</li>
+      <li><code>quality</code>: Calidad predeterminada (hd o sd)</li>
+    </ul>
+    <p>Al cambiar de episodio, solo se actualiza el iframe con los nuevos parámetros, sin necesidad de recargar toda la página.</p>
+  </div>
+
+  <script>
+    function changeEpisode(episodeId) {
+      const iframe = document.getElementById('player-iframe');
+      let videoHD, videoSD, subtitle;
+      
+      if (episodeId === 'episode1') {
+        videoHD = 'http://localhost:3000/api/video/mdkepisode1.mp4?resolution=720p';
+        videoSD = 'http://localhost:3000/api/video/mdkepisode1.mp4?resolution=480p';
+        subtitle = 'mdkepisode1.ass';
+      } else if (episodeId === 'episode2') {
+        videoHD = 'http://localhost:3000/api/video/mdkepisode2.mp4?resolution=720p';
+        videoSD = 'http://localhost:3000/api/video/mdkepisode2.mp4?resolution=480p';
+        subtitle = 'mdkepisode2.ass';
+      }
+      
+      // Construir la nueva URL con los parámetros actualizados
+      const newSrc = `index.html?episode=${episodeId}&videoHD=${encodeURIComponent(videoHD)}&videoSD=${encodeURIComponent(videoSD)}&subtitle=${encodeURIComponent(subtitle)}&quality=hd`;
+      
+      // Actualizar el src del iframe
+      iframe.src = newSrc;
+    }
+  </script>
+</body>
+</html>

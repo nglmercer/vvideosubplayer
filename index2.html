@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reproductor de Video con Plyr</title>
+  <!-- Importar estilos si no se usan módulos -->
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <style>
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .controls {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 5px;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 15px;
+      background: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0055aa;
+    }
+    .caption-controls {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Reproductor de Video con Subtítulos</h1>
+    
+    <!-- Elemento de video con crossorigin habilitado -->
+    <video id="player" controls crossorigin="anonymous"></video>
+    
+    <div class="controls">
+      <button id="btn-change-video">Cambiar Video</button>
+    </div>
+  </div>
+
+
+  <!-- Si no usas módulos, importar script directamente -->
+  <!-- <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script> -->
+  <!-- <script src="app.js"></script> -->
+   <script type="module" src="./src/main.js"></script>
+</body>
+</html>

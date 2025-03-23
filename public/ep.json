@@ -1,0 +1,14 @@
+{
+    "anterior":
+    {
+        "idCapitulo": 600001,
+        "numeroTemporada": 2,
+        "numeroCapitulo": 9
+    },
+    "siguiente":
+    {
+        "idCapitulo": 600002,
+        "numeroTemporada": 3,
+        "numeroCapitulo": 1
+    }
+}
