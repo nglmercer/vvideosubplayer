@@ -71,7 +71,7 @@
   </div>
   
   <div class="player-container">
-    <iframe id="player-iframe" src="iframe-player.html?episode=episode1&videoHD=http://localhost:3000/api/video/mdkepisode1.mp4?resolution=720p&videoSD=http://localhost:3000/api/video/mdkepisode1.mp4?resolution=480p&subtitle=mdkepisode1.ass&quality=hd" allowfullscreen></iframe>
+    <iframe id="player-iframe" src="" allowfullscreen></iframe>
   </div>
   
   <div class="instructions">
@@ -103,15 +103,16 @@
     <pre style="background-color: #f8f8f8; padding: 15px; border-radius: 5px; overflow-x: auto;">
 // Datos de configuración
 const config = {
-  episode: "episode1",
-  videoHD: "  ?resolution=720p",
-  videoSD: "  ?resolution=480p",
-  subtitle: "http://localhost:3000/api/subs/mdkepisode1.ass",
-  quality: "hd"
+  episode: "episode1", //nombre o id de referencia no es necesario
+  videoHD: "  ?resolution=720p", //url de video HD
+  videoSD: "  ?resolution=480p", //url de video SD
+  subtitle: "http://localhost:3000/api/subs/mdkepisode1.ass", // subtitle url en formato ass o vtt// formato string o data.subtitleFile 
+  quality: "hd"// hd o sd
 };
 
 // Construir la URL con parámetros codificados
-const iframeSrc = `/iframe-player.html?episode=${config.episode}&videoHD=${encodeURIComponent(config.videoHD)}&videoSD=${encodeURIComponent(config.videoSD)}&subtitle=${encodeURIComponent(config.subtitle)}&quality=${config.quality}`;
+const url = "url de la pagina donde esta el iframe";
+const iframeSrc = url + `?episode=${config.episode}&videoHD=${encodeURIComponent(config.videoHD)}&videoSD=${encodeURIComponent(config.videoSD)}&subtitle=${encodeURIComponent(config.subtitle)}&quality=${config.quality}`;
 
 // Crear el elemento iframe
 const iframe = document.createElement("iframe");
@@ -132,12 +133,12 @@ document.querySelector(".player-container").appendChild(iframe);
         videoHD = 'http://localhost:3000/api/video/mdkepisode1.mp4?resolution=720p';
         videoSD = 'http://localhost:3000/api/video/mdkepisode1.mp4?resolution=480p';
         //  subtitle = 'mdkepisode1.ass';
-        subtitle = "/src/subtitles/sample.vtt";
+        subtitle = "http://localhost:3000/mdkepisode1.ass";
       //  subtitle = 'http://localhost:3000/api/subs/mdkepisode1.ass';
       } else if (episodeId === 'episode2') {
         videoHD = 'http://localhost:3000/api/video/mdkepisode2.mp4?resolution=720p';
         videoSD = 'http://localhost:3000/api/video/mdkepisode2.mp4?resolution=480p';
-        subtitle = "/src/subtitles/sample.vtt";
+        subtitle = "http://localhost:3000/mdkepisode1.ass";
       //  subtitle = 'mdkepisode2.ass';
       //  subtitle = 'http://localhost:3000/api/subs/mdkepisode2.ass';
       }
@@ -148,6 +149,7 @@ document.querySelector(".player-container").appendChild(iframe);
       // Actualizar el src del iframe
       iframe.src = newSrc;
     }
+    changeEpisode('episode1');
   </script>
 </body>
 </html>

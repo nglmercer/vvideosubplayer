@@ -53,32 +53,37 @@
     }
 
     // Función para obtener subtítulos
-    async function fetchSubtitles(subnameFile, defaultfetchurl= "") {
-
+    async function fetchSubtitles(subnameFile) {
       try {
         if (!subnameFile) {
-          console.warn('No subtitle file specified');
+          console.warn("No subtitle file specified");
           return null;
         }
-        
-        console.log('Fetching subtitles:', subnameFile);
-        // si subnamefile es una url, lo usamos para hacer la peticion
-        const urltofetch =  subnameFile;
-        const response = await fetch(urltofetch);
-        
+
+        console.log("Fetching subtitles:", subnameFile);
+        const response = await fetch(subnameFile);
+
         if (!response.ok) {
-          throw new Error('Error en la respuesta del servidor: ' + response.status);
+          throw new Error("Error en la respuesta del servidor: " + response.status);
         }
-        
-        const data = await response.json();
-        console.log('Subtítulos obtenidos correctamente');
-        return data;
-        
+
+        // Detectar si el contenido es JSON o texto
+        const contentType = response.headers.get("content-type");
+
+        if (contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          return data.subtitleFile;
+        } else {
+          const data = await response.text();
+          console.log("Subtítulos obtenidos como texto",data, response);
+          return data;
+        }
       } catch (error) {
-        console.error('Error al obtener subtítulos:', error);
+        console.error("Error al obtener subtítulos:", error);
         return null;
       }
     }
+
 
     // Inicializar reproductor con subtítulos
     async function initializePlayerWithParams() {
@@ -151,18 +156,17 @@
           defaultQuality: params.defaultQuality,
           captionTracks: [
             { label: 'Español', srclang: 'es', src: subtitulosES, default: true },
-            { label: 'English', srclang: 'en', src: subtitulosEN }
           ]
         });
 
         // Inicializar JASSUB después de que Plyr esté listo
-        if (subtitleData && subtitleData.subtitle) {
+        if (typeof subtitleData === "string") {
           player.player.on('ready', () => {
             console.log('Plyr player initialized');
             const videoElement = player.player.elements.container.querySelector('video');
             
             // Pasar el contenido de subtítulos
-            player.initializeJASSUB(videoElement, subtitleData.subtitle);
+            player.initializeJASSUB(videoElement, subtitleData);// .subtitle
           });
 
           // Añadir listener para cambio de calidad
@@ -175,7 +179,7 @@
               
               // Volver a inicializar JASSUB
               console.log('Reinitializing JASSUB after quality change');
-              player.initializeJASSUB(videoElement, subtitleData.subtitle);
+              player.initializeJASSUB(videoElement, subtitleData);
             }, 500);
           });
         }
