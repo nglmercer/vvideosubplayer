@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Player</title>
+</head>
+<body>
+    <div id="player-container">
+        <div id="player"></div>
+    </div>
+    <script type="module">
+import 'plyr/dist/plyr.css';
+import Plyr from 'plyr';
+
+class UniversalSubtitlePlayer {
+    constructor(elementId) {
+        this.elementId = elementId;
+        this.player = null;
+    }
+
+    getUrlParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return {
+            episode: urlParams.get('episode') || '1',
+            videoHD: urlParams.get('videoHD') || '',
+            videoSD: urlParams.get('videoSD') || '',
+            subtitleFile: urlParams.get('subtitle') || '', // Match the parameter name with initialize
+            defaultQuality: urlParams.get('defaultQuality') || 'hd'
+        };
+    }
+
+    async initialize({ episode, videoHD, videoSD, subtitleFile, defaultQuality }) {
+        const videoSource = defaultQuality === 'hd' && videoHD ? videoHD : videoSD;
+
+        // Create video element
+        const videoElement = document.createElement('video');
+        videoElement.id = 'video-player';
+        videoElement.setAttribute('data-plyr-provider', 'html5');
+        videoElement.setAttribute('playsinline', true);
+
+        // Add source
+        const sourceElement = document.createElement('source');
+        sourceElement.src = videoSource;
+        sourceElement.type = 'video/mp4';
+        videoElement.appendChild(sourceElement);
+
+        // Add subtitles if provided
+        if (subtitleFile) {
+            const trackElement = document.createElement('track');
+            trackElement.setAttribute('kind', 'subtitles');
+            trackElement.setAttribute('label', 'English');
+            trackElement.setAttribute('srclang', 'en');
+            trackElement.setAttribute('src', subtitleFile);
+            trackElement.setAttribute('default', ''); // Set as empty string for better compatibility
+            videoElement.appendChild(trackElement);
+        }
+
+        // Append video to container
+        const container = document.getElementById(this.elementId);
+        container.appendChild(videoElement);
+
+        // Initialize Plyr with explicit captions support
+        this.player = new Plyr(videoElement, {
+            controls: [
+                'play-large',
+                'play',
+                'progress',
+                'current-time',
+                'mute',
+                'volume',
+                'captions', // Ensure captions control is included
+                'settings',
+                'fullscreen'
+            ],
+            settings: ['captions', 'quality', 'speed'],
+            captions: {
+                active: !!subtitleFile, // Enable captions by default if subtitle file exists
+                language: 'en',
+                update: true
+            },
+            quality: {
+                default: defaultQuality === 'hd' ? 1080 : 480,
+                options: [1080, 720, 480]
+            }
+        });
+
+        // Add event listener to verify captions loading
+        this.player.on('ready', () => {
+            console.log('Player ready, available captions:', this.player.captions);
+            if (subtitleFile) {
+                this.player.toggleCaptions(true); // Force enable captions
+            }
+        });
+
+        return this.player;
+    }
+
+    destroy() {
+        if (this.player) {
+            this.player.destroy();
+        }
+    }
+}
+
+async function initializePlayer() {
+    const params = new UniversalSubtitlePlayer('player').getUrlParams();
+    console.log('Loaded parameters:', params);
+
+    const player = new UniversalSubtitlePlayer('player');
+
+    try {
+        await player.initialize({
+            episode: params.episode,
+            videoHD: params.videoHD,
+            videoSD: params.videoSD,
+            subtitleFile: params.subtitleFile, // Match the parameter name
+            defaultQuality: params.defaultQuality
+        });
+    } catch (error) {
+        console.error('Player initialization error:', error);
+    }
+}
+
+// Start the player
+initializePlayer();
+
+// Optional: To use in an iframe, you could call it like this:
+// <iframe src="http://yourdomain.com/?videoHD=video.mp4&subtitleFile=subs.vtt&defaultQuality=hd"></iframe>
+    </script>
+</body>
+</html>

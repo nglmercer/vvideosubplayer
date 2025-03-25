@@ -53,7 +53,8 @@
     }
 
     // Función para obtener subtítulos
-    async function fetchSubtitles(subnameFile, defaultfetchurl= "http://localhost:3000/api/subs/") {
+    async function fetchSubtitles(subnameFile, defaultfetchurl= "") {
+
       try {
         if (!subnameFile) {
           console.warn('No subtitle file specified');
@@ -62,7 +63,7 @@
         
         console.log('Fetching subtitles:', subnameFile);
         // si subnamefile es una url, lo usamos para hacer la peticion
-        const urltofetch =  subnameFile.startsWith('http') ? subnameFile : defaultfetchurl + subnameFile;
+        const urltofetch =  subnameFile;
         const response = await fetch(urltofetch);
         
         if (!response.ok) {
@@ -140,8 +141,9 @@
         }
 
         // URLs de muestra para subtítulos (solo para UI)
-        const subtitulosES = './src/subtitles/sample.ass';
-        const subtitulosEN = './src/subtitles/sample.ass';
+        // using params srt subtitles link
+        const subtitulosES = params.subtitleFile;
+        const subtitulosEN = params.subtitleFile;
 
         // Configurar video con subtítulos
         player.changeSource({
@@ -149,7 +151,6 @@
           defaultQuality: params.defaultQuality,
           captionTracks: [
             { label: 'Español', srclang: 'es', src: subtitulosES, default: true },
-            { label: 'English', srclang: 'en', src: subtitulosEN }
           ]
         });
 

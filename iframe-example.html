@@ -71,7 +71,7 @@
   </div>
   
   <div class="player-container">
-    <iframe id="player-iframe" src="iframe-player.html?episode=episode1&videoHD=https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4?resolution=720p&videoSD=https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4?resolution=480p&subtitle=mdkepisode1.ass&quality=hd" allowfullscreen></iframe>
+    <iframe id="player-iframe" src="iframe-player.html?episode=episode1&videoHD=http://localhost:3000/api/video/mdkepisode1.mp4?resolution=720p&videoSD=http://localhost:3000/api/video/mdkepisode1.mp4?resolution=480p&subtitle=mdkepisode1.ass&quality=hd" allowfullscreen></iframe>
   </div>
   
   <div class="instructions">
@@ -91,8 +91,8 @@
     <pre style="background-color: #f8f8f8; padding: 15px; border-radius: 5px; overflow-x: auto;">
 {
   "episode": "episode1",
-  "videoHD": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4?resolution=720p",
-  "videoSD": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4?resolution=480p",
+  "videoHD": "  ?resolution=720p",
+  "videoSD": "  ?resolution=480p",
   "subtitle": "http://localhost:3000/api/subs/mdkepisode1.ass",
   "quality": "hd"
 }
@@ -104,14 +104,14 @@
 // Datos de configuración
 const config = {
   episode: "episode1",
-  videoHD: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4?resolution=720p",
-  videoSD: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4?resolution=480p",
+  videoHD: "  ?resolution=720p",
+  videoSD: "  ?resolution=480p",
   subtitle: "http://localhost:3000/api/subs/mdkepisode1.ass",
   quality: "hd"
 };
 
 // Construir la URL con parámetros codificados
-const iframeSrc = `https://api.video.koinima.com/newplayer/?episode=${config.episode}&videoHD=${encodeURIComponent(config.videoHD)}&videoSD=${encodeURIComponent(config.videoSD)}&subtitle=${encodeURIComponent(config.subtitle)}&quality=${config.quality}`;
+const iframeSrc = `/iframe-player.html?episode=${config.episode}&videoHD=${encodeURIComponent(config.videoHD)}&videoSD=${encodeURIComponent(config.videoSD)}&subtitle=${encodeURIComponent(config.subtitle)}&quality=${config.quality}`;
 
 // Crear el elemento iframe
 const iframe = document.createElement("iframe");
@@ -129,19 +129,21 @@ document.querySelector(".player-container").appendChild(iframe);
       let videoHD, videoSD, subtitle;
       
       if (episodeId === 'episode1') {
-        videoHD = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4?resolution=720p';
-        videoSD = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4?resolution=480p';
+        videoHD = 'http://localhost:3000/api/video/mdkepisode1.mp4?resolution=720p';
+        videoSD = 'http://localhost:3000/api/video/mdkepisode1.mp4?resolution=480p';
         //  subtitle = 'mdkepisode1.ass';
-        subtitle = 'http://localhost:3000/api/subs/mdkepisode1.ass';
+        subtitle = "/src/subtitles/sample.vtt";
+      //  subtitle = 'http://localhost:3000/api/subs/mdkepisode1.ass';
       } else if (episodeId === 'episode2') {
         videoHD = 'http://localhost:3000/api/video/mdkepisode2.mp4?resolution=720p';
         videoSD = 'http://localhost:3000/api/video/mdkepisode2.mp4?resolution=480p';
+        subtitle = "/src/subtitles/sample.vtt";
       //  subtitle = 'mdkepisode2.ass';
-        subtitle = 'http://localhost:3000/api/subs/mdkepisode2.ass';
+      //  subtitle = 'http://localhost:3000/api/subs/mdkepisode2.ass';
       }
-      
+      ///iframe-player.html?episode=episode2&videoHD=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fvideo%2Fmdkepisode2.mp4%3Fresolution%3D720p&videoSD=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fvideo%2Fmdkepisode2.mp4%3Fresolution%3D480p&subtitle=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fsubs%2Fmdkepisode2.ass&quality=hd
       // Construir la nueva URL con los parámetros actualizados
-      const newSrc = `iframe-player.html?episode=${episodeId}&videoHD=${encodeURIComponent(videoHD)}&videoSD=${encodeURIComponent(videoSD)}&subtitle=${encodeURIComponent(subtitle)}&quality=hd`;
+      const newSrc = `/iframe-player.html?episode=${episodeId}&videoHD=${encodeURIComponent(videoHD)}&videoSD=${encodeURIComponent(videoSD)}&subtitle=${encodeURIComponent(subtitle)}&quality=hd`;
       
       // Actualizar el src del iframe
       iframe.src = newSrc;
