@@ -12,7 +12,9 @@
     "vite": "^6.2.0"
   },
   "dependencies": {
+    "hls.js": "^1.5.20",
     "jassub": "^1.7.18",
+    "m3u8-parser": "^7.2.0",
     "plyr": "^3.7.8"
   }
 }
