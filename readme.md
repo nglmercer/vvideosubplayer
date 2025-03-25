@@ -13,8 +13,8 @@ how use
 // Datos de configuración
 const config = {
   episode: "episode1", //nombre o id de referencia no es necesario
-  videoHD: "  ?resolution=720p", //url de video HD
-  videoSD: "  ?resolution=480p", //url de video SD
+  videoHD: "http://localhost:3000/api/video/mdkepisode1.mp4?resolution=720p", //url de video HD
+  videoSD: "http://localhost:3000/api/video/mdkepisode1.mp4?resolution=480p", //url de video SD
   subtitle: "http://localhost:3000/api/subs/mdkepisode1.ass", // subtitle url en formato ass o vtt// formato string o data.subtitleFile 
   quality: "hd"// hd o sd
 };
