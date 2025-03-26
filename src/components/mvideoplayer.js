@@ -5,15 +5,21 @@ import '/src/style.css';
 import 'plyr/dist/plyr.css';
 import { Parser } from 'm3u8-parser';
 import Plyr from 'plyr';
-
+import Hls from 'hls.js';
 // Utility Functions
 const fetchM3U8 = async (url) => {
-  const response = await fetch(url);
-  const text = await response.text();
-  const parser = new Parser();
-  parser.push(text);
-  parser.end();
-  return parser.manifest;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+    const text = await response.text();
+    const parser = new Parser();
+    parser.push(text);
+    parser.end();
+    return parser.manifest;
+  } catch (error) {
+    console.error('Error fetching M3U8:', error);
+    return null;
+  }
 };
 
 const fetchSubtitles = async (url) => {
@@ -43,7 +49,7 @@ const fetchSubtitles = async (url) => {
     return null;
   }
 };
-
+//video.getElementsByTagName("source")[0].setAttribute("src", "https://api.koinima.com/res2/video/master/"+urlParams.get('capitulo')+"?Authorization="+urlParams.get('Authorization'));
 // Video Player Class
 class VideoPlayer {
   constructor(videoElement, m3u8Url) {
@@ -72,8 +78,58 @@ class VideoPlayer {
   }
 
   async setupVideoSource() {
-    const source = this.video.querySelector('source');
-    source.setAttribute('src', this.m3u8Url);
+      // Verificar si hls.js es soportado
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          debug: true, // Activa el modo debug para ver más detalles en la consola
+        });
+        // establecemos window.hls para acceder a hls.js desde cualquier parte del código
+        window.hls = hls;
+        // Cargar el archivo .m3u8
+        hls.loadSource(this.m3u8Url);
+  
+        // Vincular el elemento <video> a hls.js
+        hls.attachMedia(this.video);
+  
+        // Evento cuando el manifiesto está listo
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log('Manifiesto HLS cargado, iniciando reproducción...');
+          this.video.play().catch((error) => {
+            console.error('Error al iniciar la reproducción:', error);
+          });
+        });
+  
+        // Manejo de errores
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          console.error('Error de HLS:', data);
+          if (data.fatal) {
+            console.error('Error fatal detectado:', data.type);
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.error('Error de red, intentando reiniciar...');
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.error('Error de medios, intentando recuperar...');
+                hls.recoverMediaError();
+                break;
+              default:
+                console.error('Error irrecuperable, destruyendo instancia...');
+                hls.destroy();
+                break;
+            }
+          }
+        });
+      } else if (this.video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Soporte nativo (p. ej., Safari)
+        this.video.src = this.m3u8Url;
+        this.video.addEventListener('loadedmetadata', () => {
+          this.video.play();
+        });
+      } else {
+        console.error('HLS no es soportado en este navegador.');
+      }
+    
   }
 
   async parseManifest() {
@@ -111,7 +167,7 @@ class VideoPlayer {
       captions: { active: true, update: true, language: 'es' },
       autoplay: true,
       quality: {
-        default: this.tracks.video[0]?.height || 0,
+        default: 0,
         options: qualityOptions,
         forced: true,
         onChange: quality => this.handleQualityChange(quality)
@@ -126,7 +182,8 @@ class VideoPlayer {
         qualityLabel: { 0: 'Auto' }
       },
       controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 
-        'captions', 'settings', 'fullscreen']
+        'captions', 'settings', 'fullscreen',   
+  ]
     });
   }
 
@@ -170,8 +227,8 @@ class VideoPlayer {
     
       this.player.on('captionsdisabled', () => {
         console.log('Captions disabled');
-            this.jassub?.freeTrack();
-
+/*             this.jassub?.freeTrack();
+ */
       });
   }
 
@@ -182,6 +239,7 @@ class VideoPlayer {
       this.video.load();
       this.video.play();
     }
+    updateQuality(quality)
   }
 
   async handleQualityChangeEvent() {
@@ -243,5 +301,17 @@ class VideoPlayer {
     }
   }
 }
-
+function updateQuality(newQuality) {
+  console.log("Quiere cambiar a " + newQuality)
+  if (newQuality === 0) {
+    window.hls.currentLevel = -1; //Enable AUTO quality if option.value = 0
+  } else {
+    window.hls.levels.forEach((level, levelIndex) => {
+      if (level.height === newQuality) {
+        console.log("Found quality match with " + newQuality);
+        window.hls.currentLevel = levelIndex;
+      }
+    });
+  }
+}
 export { VideoPlayer };
